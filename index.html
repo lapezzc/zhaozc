@@ -1,0 +1,833 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>优居悦府店预算表</title>
+    <style>
+        body {
+            font-family: 'Microsoft YaHei', Arial, sans-serif;
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+            position: relative;
+        }
+        body::after {
+            content: "优居优住荣和公园悦府店专用";
+            position: fixed;
+            opacity: 0.1;
+            font-size: 60px;
+            z-index: -1;
+            transform: rotate(-30deg);
+            top: 30%;
+            left: 10%;
+            pointer-events: none;
+            color: #333;
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .calculator {
+            background-color: white;
+            padding: 25px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            position: relative;
+        }
+        .row {
+            display: flex;
+            margin-bottom: 15px;
+            gap: 15px;
+        }
+        .form-group {
+            flex: 1;
+            position: relative;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #555;
+        }
+        input, select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        .small-text {
+            font-size: 12px;
+            color: #666;
+            margin-top: 3px;
+        }
+        .result-box {
+            background-color: #f9f9f9;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+        }
+        .result-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+        }
+        .total-row {
+            font-weight: bold;
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 1px dashed #ccc;
+        }
+        .section-title {
+            font-size: 18px;
+            color: #333;
+            margin: 20px 0 10px 0;
+            padding-bottom: 5px;
+            border-bottom: 1px solid #eee;
+        }
+        .note {
+            font-size: 12px;
+            color: #777;
+            margin-top: 20px;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            width: 100%;
+            margin-top: 15px;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        .fee-owner-btn {
+            position: absolute;
+            right: 0;
+            top: 27px;
+            width: 40px;
+            height: 38px;
+            border: 1px solid #ddd;
+            border-radius: 0 4px 4px 0;
+            background: #f5f5f5;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+        }
+        .fee-owner-btn:hover {
+            background: #e5e5e5;
+        }
+        .fee-owner-menu {
+            position: absolute;
+            right: 0;
+            top: 65px;
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            z-index: 10;
+            display: none;
+        }
+        .fee-owner-menu div {
+            padding: 8px 12px;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+        .fee-owner-menu div:hover {
+            background: #f5f5f5;
+        }
+        .results-container {
+            display: flex;
+            gap: 15px;
+        }
+        .results-column {
+            flex: 1;
+        }
+    </style>
+</head>
+<body>
+    <h1>优居悦府店预算表</h1>
+    
+    <div class="calculator">
+        <!-- 第一排：房屋基本信息 -->
+        <div class="section-title">房屋基本信息</div>
+        <div class="row">
+            <div class="form-group">
+                <label for="totalPrice">房屋总价 (万元)</label>
+                <input type="number" id="totalPrice" placeholder="总价" oninput="calculatePrice()">
+            </div>
+            <div class="form-group">
+                <label for="area">房屋面积 (㎡)</label>
+                <input type="number" id="area" placeholder="面积" oninput="calculatePrice()">
+            </div>
+            <div class="form-group">
+                <label for="unitPrice">房屋单价 (元/㎡)</label>
+                <input type="number" id="unitPrice" placeholder="单价" oninput="calculatePrice()">
+            </div>
+        </div>
+        
+        <!-- 第二排：评估信息 -->
+        <div class="section-title">评估信息</div>
+        <div class="row">
+            <div class="form-group">
+                <label for="assessedValue">评估总价 (万元)</label>
+                <input type="number" id="assessedValue" placeholder="评估总价" oninput="calculateAssessed()">
+            </div>
+            <div class="form-group">
+                <label for="assessedUnitPrice">评估单价 (元/㎡)</label>
+                <input type="number" id="assessedUnitPrice" placeholder="评估单价" oninput="calculateAssessed()">
+            </div>
+            <div class="form-group">
+                <label for="isFirstHome">是否首套房</label>
+                <select id="isFirstHome" onchange="calculateFees()">
+                    <option value="true">是</option>
+                    <option value="false">否</option>
+                </select>
+            </div>
+        </div>
+        
+        <!-- 第三排：首付与贷款 -->
+        <div class="section-title">首付与贷款</div>
+        <div class="row">
+            <div class="form-group">
+                <label for="downPayment">首付金额 (万元)</label>
+                <input type="number" id="downPayment" placeholder="首付金额" oninput="calculateLoan()">
+                <div class="small-text" id="minDownPaymentText">最低首付: -</div>
+            </div>
+            <div class="form-group">
+                <label for="loanAmount">贷款金额 (万元)</label>
+                <input type="number" id="loanAmount" placeholder="贷款金额" oninput="calculateLoan()">
+                <div class="small-text" id="maxLoanText">最高贷款: -</div>
+            </div>
+            <div class="form-group">
+                <label for="loanRate">贷款利率 (%)</label>
+                <input type="number" id="loanRate" placeholder="贷款利率" step="0.1" oninput="calculateMonthlyPayment()">
+            </div>
+            <div class="form-group">
+                <label for="loanYears">贷款年限 (年)</label>
+                <select id="loanYears" onchange="calculateMonthlyPayment()">
+                    <option value="1">1年</option>
+                    <option value="5">5年</option>
+                    <option value="10">10年</option>
+                    <option value="20">20年</option>
+                    <option value="30" selected>30年</option>
+                </select>
+            </div>
+        </div>
+        
+        <!-- 第四排：贷款计算结果 -->
+        <div class="section-title">贷款计算结果</div>
+        <div class="row">
+            <div class="form-group">
+                <label>月供金额 (元)</label>
+                <div class="result-box" id="monthlyPayment">-</div>
+            </div>
+            <div class="form-group">
+                <label>总利息 (元)</label>
+                <div class="result-box" id="totalInterest">-</div>
+            </div>
+        </div>
+        
+        <!-- 第五排：费用设置 -->
+        <div class="section-title">费用设置</div>
+        <div class="row">
+            <div class="form-group">
+                <label for="deedTaxRate">契税 (%)</label>
+                <input type="number" id="deedTaxRate" value="1" step="0.1" oninput="calculateFees()">
+                <div class="fee-owner-btn" onclick="toggleOwnerMenu('deedTaxOwner')">买</div>
+                <div class="fee-owner-menu" id="deedTaxOwnerMenu">
+                    <div onclick="setOwner('deedTaxOwner', 'buyer')">买方</div>
+                    <div onclick="setOwner('deedTaxOwner', 'seller')">卖方</div>
+                    <div onclick="setOwner('deedTaxOwner', 'both')">双方各</div>
+                </div>
+                <input type="hidden" id="deedTaxOwner" value="buyer">
+            </div>
+            <div class="form-group">
+                <label for="incomeTaxRate">个人所得税 (%)</label>
+                <input type="number" id="incomeTaxRate" value="1" step="0.1" oninput="calculateFees()">
+                <div class="fee-owner-btn" onclick="toggleOwnerMenu('incomeTaxOwner')">卖</div>
+                <div class="fee-owner-menu" id="incomeTaxOwnerMenu">
+                    <div onclick="setOwner('incomeTaxOwner', 'buyer')">买方</div>
+                    <div onclick="setOwner('incomeTaxOwner', 'seller')">卖方</div>
+                    <div onclick="setOwner('incomeTaxOwner', 'both')">双方各</div>
+                </div>
+                <input type="hidden" id="incomeTaxOwner" value="seller">
+            </div>
+            <div class="form-group">
+                <label for="vatRate">增值税 (%)</label>
+                <input type="number" id="vatRate" placeholder="增值税率" step="0.1" oninput="calculateFees()">
+                <div class="fee-owner-btn" onclick="toggleOwnerMenu('vatOwner')">卖</div>
+                <div class="fee-owner-menu" id="vatOwnerMenu">
+                    <div onclick="setOwner('vatOwner', 'buyer')">买方</div>
+                    <div onclick="setOwner('vatOwner', 'seller')">卖方</div>
+                    <div onclick="setOwner('vatOwner', 'both')">双方各</div>
+                </div>
+                <input type="hidden" id="vatOwner" value="seller">
+            </div>
+        </div>
+        <div class="row">
+            <div class="form-group">
+                <label for="buyerAgencyRate">买方中介费 (%)</label>
+                <input type="number" id="buyerAgencyRate" value="1.5" step="0.1" oninput="calculateFees()">
+            </div>
+            <div class="form-group">
+                <label for="sellerAgencyRate">卖方中介费 (%)</label>
+                <input type="number" id="sellerAgencyRate" value="1.5" step="0.1" oninput="calculateFees()">
+            </div>
+            <div class="form-group">
+                <label for="financingFee">垫资服务费 (元)</label>
+                <input type="number" id="financingFee" value="0" oninput="calculateFees()">
+                <div class="fee-owner-btn" onclick="toggleOwnerMenu('financingFeeOwner')">买</div>
+                <div class="fee-owner-menu" id="financingFeeOwnerMenu">
+                    <div onclick="setOwner('financingFeeOwner', 'buyer')">买方</div>
+                    <div onclick="setOwner('financingFeeOwner', 'seller')">卖方</div>
+                    <div onclick="setOwner('financingFeeOwner', 'both')">双方各</div>
+                </div>
+                <input type="hidden" id="financingFeeOwner" value="buyer">
+            </div>
+        </div>
+        <div class="row">
+            <div class="form-group">
+                <label for="loanServiceFee">贷款服务费 (元)</label>
+                <input type="number" id="loanServiceFee" value="0" oninput="calculateFees()">
+                <div class="fee-owner-btn" onclick="toggleOwnerMenu('loanServiceFeeOwner')">买</div>
+                <div class="fee-owner-menu" id="loanServiceFeeOwnerMenu">
+                    <div onclick="setOwner('loanServiceFeeOwner', 'buyer')">买方</div>
+                    <div onclick="setOwner('loanServiceFeeOwner', 'seller')">卖方</div>
+                    <div onclick="setOwner('loanServiceFeeOwner', 'both')">双方各</div>
+                </div>
+                <input type="hidden" id="loanServiceFeeOwner" value="buyer">
+            </div>
+            <div class="form-group">
+                <label for="documentFee">权证费 (元)</label>
+                <input type="number" id="documentFee" value="3000" oninput="calculateFees()">
+                <div class="fee-owner-btn" onclick="toggleOwnerMenu('documentFeeOwner')">买</div>
+                <div class="fee-owner-menu" id="documentFeeOwnerMenu">
+                    <div onclick="setOwner('documentFeeOwner', 'buyer')">买方</div>
+                    <div onclick="setOwner('documentFeeOwner', 'seller')">卖方</div>
+                    <div onclick="setOwner('documentFeeOwner', 'both')">双方各</div>
+                </div>
+                <input type="hidden" id="documentFeeOwner" value="buyer">
+            </div>
+            <div class="form-group">
+                <label for="mortgageFee">工本费 (元)</label>
+                <input type="number" id="mortgageFee" value="80" oninput="calculateFees()">
+                <div class="fee-owner-btn" onclick="toggleOwnerMenu('mortgageFeeOwner')">买</div>
+                <div class="fee-owner-menu" id="mortgageFeeOwnerMenu">
+                    <div onclick="setOwner('mortgageFeeOwner', 'buyer')">买方</div>
+                    <div onclick="setOwner('mortgageFeeOwner', 'seller')">卖方</div>
+                    <div onclick="setOwner('mortgageFeeOwner', 'both')">双方各</div>
+                </div>
+                <input type="hidden" id="mortgageFeeOwner" value="buyer">
+            </div>
+            <div class="form-group">
+                <label for="otherFee">其他费用 (元)</label>
+                <input type="number" id="otherFee" value="0" oninput="calculateFees()">
+                <div class="fee-owner-btn" onclick="toggleOwnerMenu('otherFeeOwner')">买</div>
+                <div class="fee-owner-menu" id="otherFeeOwnerMenu">
+                    <div onclick="setOwner('otherFeeOwner', 'buyer')">买方</div>
+                    <div onclick="setOwner('otherFeeOwner', 'seller')">卖方</div>
+                    <div onclick="setOwner('otherFeeOwner', 'both')">双方各</div>
+                </div>
+                <input type="hidden" id="otherFeeOwner" value="buyer">
+            </div>
+        </div>
+        
+        <!-- 第六排：费用计算结果 -->
+        <div class="section-title">费用计算结果</div>
+        <div class="results-container">
+            <div class="results-column">
+                <div class="result-box">
+                    <h3>买方费用</h3>
+                    <div class="result-row">
+                        <span>契税:</span>
+                        <span id="buyerDeedTax">-</span>
+                    </div>
+                    <div class="result-row">
+                        <span>个人所得税:</span>
+                        <span id="buyerIncomeTax">-</span>
+                    </div>
+                    <div class="result-row">
+                        <span>增值税:</span>
+                        <span id="buyerVAT">-</span>
+                    </div>
+                    <div class="result-row">
+                        <span>中介费:</span>
+                        <span id="buyerAgencyFee">-</span>
+                    </div>
+                    <div class="result-row">
+                        <span>贷款服务费:</span>
+                        <span id="buyerLoanServiceFee">-</span>
+                    </div>
+                    <div class="result-row">
+                        <span>垫资服务费:</span>
+                        <span id="buyerFinancingFee">-</span>
+                    </div>
+                    <div class="result-row">
+                        <span>权证费:</span>
+                        <span id="buyerDocumentFee">-</span>
+                    </div>
+                    <div class="result-row">
+                        <span>工本费:</span>
+                        <span id="buyerMortgageFee">-</span>
+                    </div>
+                    <div class="result-row">
+                        <span>其他费用:</span>
+                        <span id="buyerOtherFee">-</span>
+                    </div>
+                    <div class="result-row total-row">
+                        <span>首付金额:</span>
+                        <span id="buyerDownPayment">-</span>
+                    </div>
+                    <div class="result-row total-row">
+                        <span>买方总费用:</span>
+                        <span id="buyerTotal">-</span>
+                    </div>
+                </div>
+            </div>
+            <div class="results-column">
+                <div class="result-box">
+                    <h3>卖方费用</h3>
+                    <div class="result-row">
+                        <span>契税:</span>
+                        <span id="sellerDeedTax">-</span>
+                    </div>
+                    <div class="result-row">
+                        <span>个人所得税:</span>
+                        <span id="sellerIncomeTax">-</span>
+                    </div>
+                    <div class="result-row">
+                        <span>增值税:</span>
+                        <span id="sellerVAT">-</span>
+                    </div>
+                    <div class="result-row">
+                        <span>中介费:</span>
+                        <span id="sellerAgencyFee">-</span>
+                    </div>
+                    <div class="result-row">
+                        <span>贷款服务费:</span>
+                        <span id="sellerLoanServiceFee">-</span>
+                    </div>
+                    <div class="result-row">
+                        <span>垫资服务费:</span>
+                        <span id="sellerFinancingFee">-</span>
+                    </div>
+                    <div class="result-row">
+                        <span>权证费:</span>
+                        <span id="sellerDocumentFee">-</span>
+                    </div>
+                    <div class="result-row">
+                        <span>工本费:</span>
+                        <span id="sellerMortgageFee">-</span>
+                    </div>
+                    <div class="result-row">
+                        <span>其他费用:</span>
+                        <span id="sellerOtherFee">-</span>
+                    </div>
+                    <div class="result-row total-row">
+                        <span>&nbsp;</span>
+                        <span>&nbsp;</span>
+                    </div>
+                    <div class="result-row total-row">
+                        <span>卖方总费用:</span>
+                        <span id="sellerTotal">-</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <button onclick="calculateAll()">重新计算所有费用</button>
+        
+        <div class="note">
+            <p>注：以上计算结果仅供参考，实际费用可能因地区政策、银行规定等因素有所不同，请以实际办理时为准。</p>
+        </div>
+    </div>
+
+    <script>
+        // 自动计算房屋总价、面积、单价之间的关系
+        function calculatePrice() {
+            const totalPriceInput = document.getElementById('totalPrice');
+            const areaInput = document.getElementById('area');
+            const unitPriceInput = document.getElementById('unitPrice');
+            
+            const totalPrice = parseFloat(totalPriceInput.value) * 10000 || 0;
+            const area = parseFloat(areaInput.value) || 0;
+            const unitPrice = parseFloat(unitPriceInput.value) || 0;
+            
+            // 确定哪个输入框触发了计算
+            const activeElement = document.activeElement;
+            
+            if (activeElement === totalPriceInput && activeElement === areaInput) {
+                // 同时修改总价和面积的情况（不太可能）
+                if (area > 0) {
+                    unitPriceInput.value = (totalPrice / area).toFixed(2);
+                }
+            } else if (activeElement === totalPriceInput && activeElement === unitPriceInput) {
+                // 同时修改总价和单价的情况（不太可能）
+                if (unitPrice > 0) {
+                    areaInput.value = (totalPrice / unitPrice).toFixed(2);
+                }
+            } else if (activeElement === areaInput && activeElement === unitPriceInput) {
+                // 同时修改面积和单价的情况（不太可能）
+                totalPriceInput.value = (area * unitPrice / 10000).toFixed(2);
+            } else if (activeElement === totalPriceInput) {
+                // 只修改了总价
+                if (area > 0) {
+                    unitPriceInput.value = (totalPrice / area).toFixed(2);
+                } else if (unitPrice > 0) {
+                    areaInput.value = (totalPrice / unitPrice).toFixed(2);
+                }
+            } else if (activeElement === areaInput) {
+                // 只修改了面积
+                if (totalPrice > 0) {
+                    unitPriceInput.value = (totalPrice / area).toFixed(2);
+                } else if (unitPrice > 0) {
+                    totalPriceInput.value = (area * unitPrice / 10000).toFixed(2);
+                }
+            } else if (activeElement === unitPriceInput) {
+                // 只修改了单价
+                if (area > 0) {
+                    totalPriceInput.value = (area * unitPrice / 10000).toFixed(2);
+                } else if (totalPrice > 0) {
+                    areaInput.value = (totalPrice / unitPrice).toFixed(2);
+                }
+            }
+            
+            // 计算贷款相关信息
+            calculateLoan();
+            calculateFees();
+        }
+        
+        // 自动计算评估总价和评估单价之间的关系
+        function calculateAssessed() {
+            const assessedValueInput = document.getElementById('assessedValue');
+            const assessedUnitPriceInput = document.getElementById('assessedUnitPrice');
+            const area = parseFloat(document.getElementById('area').value) || 0;
+            
+            const assessedValue = parseFloat(assessedValueInput.value) * 10000 || 0;
+            const assessedUnitPrice = parseFloat(assessedUnitPriceInput.value) || 0;
+            
+            const activeElement = document.activeElement;
+            
+            if (activeElement === assessedValueInput) {
+                // 修改了评估总价
+                if (area > 0) {
+                    assessedUnitPriceInput.value = (assessedValue / area).toFixed(2);
+                }
+            } else if (activeElement === assessedUnitPriceInput) {
+                // 修改了评估单价
+                if (area > 0) {
+                    assessedValueInput.value = (assessedUnitPrice * area / 10000).toFixed(2);
+                }
+            }
+            
+            // 计算最高贷款和最低首付
+            calculateMaxLoanMinDown();
+            calculateFees();
+        }
+        
+        // 计算最高贷款和最低首付
+        function calculateMaxLoanMinDown() {
+            const totalPrice = parseFloat(document.getElementById('totalPrice').value) * 10000 || 0;
+            const assessedValue = parseFloat(document.getElementById('assessedValue').value) * 10000 || 0;
+            
+            // 最高贷款 = 评估总价 × 0.85
+            const maxLoan = assessedValue * 0.85;
+            // 最低首付 = 房屋总价 - 最高贷款
+            const minDownPayment = totalPrice - maxLoan;
+            
+            document.getElementById('maxLoanText').textContent = `最高贷款: ${maxLoan > 0 ? (maxLoan / 10000).toFixed(2) + '万元' : '-'}`;
+            document.getElementById('minDownPaymentText').textContent = `最低首付: ${minDownPayment > 0 ? (minDownPayment / 10000).toFixed(2) + '万元' : '-'}`;
+        }
+        
+        // 自动计算首付和贷款金额之间的关系
+        function calculateLoan() {
+            const totalPrice = parseFloat(document.getElementById('totalPrice').value) * 10000 || 0;
+            const downPaymentInput = document.getElementById('downPayment');
+            const loanAmountInput = document.getElementById('loanAmount');
+            
+            let downPayment = parseFloat(downPaymentInput.value) * 10000 || 0;
+            let loanAmount = parseFloat(loanAmountInput.value) * 10000 || 0;
+            
+            const activeElement = document.activeElement;
+            
+            if (activeElement === downPaymentInput) {
+                // 修改了首付金额
+                loanAmount = totalPrice - downPayment;
+                loanAmountInput.value = (loanAmount / 10000).toFixed(2);
+            } else if (activeElement === loanAmountInput) {
+                // 修改了贷款金额
+                downPayment = totalPrice - loanAmount;
+                downPaymentInput.value = (downPayment / 10000).toFixed(2);
+            } else {
+                // 其他情况（如修改了总价）
+                loanAmount = totalPrice - downPayment;
+                loanAmountInput.value = (loanAmount / 10000).toFixed(2);
+            }
+            
+            calculateMonthlyPayment();
+            calculateFees();
+        }
+        
+        // 计算月供和总利息
+        function calculateMonthlyPayment() {
+            const loanAmount = parseFloat(document.getElementById('loanAmount').value) * 10000 || 0;
+            const loanRate = parseFloat(document.getElementById('loanRate').value) / 100 / 12 || 0;
+            const loanYears = parseInt(document.getElementById('loanYears').value) || 30;
+            const loanMonths = loanYears * 12;
+            
+            if (loanAmount > 0 && loanRate > 0 && loanMonths > 0) {
+                // 等额本息月供计算公式
+                const monthlyPayment = loanAmount * loanRate * Math.pow(1 + loanRate, loanMonths) / 
+                                     (Math.pow(1 + loanRate, loanMonths) - 1);
+                const totalInterest = monthlyPayment * loanMonths - loanAmount;
+                
+                document.getElementById('monthlyPayment').textContent = monthlyPayment.toFixed(0) + " 元";
+                document.getElementById('totalInterest').textContent = totalInterest.toFixed(0) + " 元";
+            } else {
+                document.getElementById('monthlyPayment').textContent = "-";
+                document.getElementById('totalInterest').textContent = "-";
+            }
+        }
+        
+        // 格式化显示金额，0显示为-
+        function formatAmount(amount) {
+            return amount === 0 ? "-" : amount.toFixed(0) + " 元";
+        }
+        
+        // 计算所有费用
+        function calculateFees() {
+            const totalPrice = parseFloat(document.getElementById('totalPrice').value) * 10000 || 0;
+            const assessedValue = parseFloat(document.getElementById('assessedValue').value) * 10000 || 0;
+            const downPayment = parseFloat(document.getElementById('downPayment').value) * 10000 || 0;
+            const isFirstHome = document.getElementById('isFirstHome').value === 'true';
+            
+            // 计算最高贷款和最低首付
+            calculateMaxLoanMinDown();
+            
+            // 获取费率和费用归属
+            const deedTaxRate = parseFloat(document.getElementById('deedTaxRate').value) / 100 || 0;
+            const deedTaxOwner = document.getElementById('deedTaxOwner').value;
+            
+            const incomeTaxRate = parseFloat(document.getElementById('incomeTaxRate').value) / 100 || 0;
+            const incomeTaxOwner = document.getElementById('incomeTaxOwner').value;
+            
+            const vatRateInput = document.getElementById('vatRate');
+            const vatRate = vatRateInput.value ? parseFloat(vatRateInput.value) / 100 : 0;
+            const vatOwner = document.getElementById('vatOwner').value;
+            
+            const buyerAgencyRate = parseFloat(document.getElementById('buyerAgencyRate').value) / 100 || 0;
+            const sellerAgencyRate = parseFloat(document.getElementById('sellerAgencyRate').value) / 100 || 0;
+            
+            const financingFee = parseFloat(document.getElementById('financingFee').value) || 0;
+            const financingFeeOwner = document.getElementById('financingFeeOwner').value;
+            
+            const loanServiceFee = parseFloat(document.getElementById('loanServiceFee').value) || 0;
+            const loanServiceFeeOwner = document.getElementById('loanServiceFeeOwner').value;
+            
+            const documentFee = parseFloat(document.getElementById('documentFee').value) || 0;
+            const documentFeeOwner = document.getElementById('documentFeeOwner').value;
+            
+            const mortgageFee = parseFloat(document.getElementById('mortgageFee').value) || 0;
+            const mortgageFeeOwner = document.getElementById('mortgageFeeOwner').value;
+            
+            const otherFee = parseFloat(document.getElementById('otherFee').value) || 0;
+            const otherFeeOwner = document.getElementById('otherFeeOwner').value;
+            
+            // 初始化买方和卖方的各项费用
+            let buyerDeedTax = 0, sellerDeedTax = 0;
+            let buyerIncomeTax = 0, sellerIncomeTax = 0;
+            let buyerVAT = 0, sellerVAT = 0;
+            let buyerFinancingFee = 0, sellerFinancingFee = 0;
+            let buyerLoanServiceFee = 0, sellerLoanServiceFee = 0;
+            let buyerDocumentFee = 0, sellerDocumentFee = 0;
+            let buyerMortgageFee = 0, sellerMortgageFee = 0;
+            let buyerOtherFee = 0, sellerOtherFee = 0;
+            
+            // 根据归属分配费用
+            // 契税
+            if (deedTaxOwner === 'buyer') {
+                buyerDeedTax = assessedValue * deedTaxRate;
+            } else if (deedTaxOwner === 'seller') {
+                sellerDeedTax = assessedValue * deedTaxRate;
+            } else if (deedTaxOwner === 'both') {
+                buyerDeedTax = assessedValue * deedTaxRate;
+                sellerDeedTax = assessedValue * deedTaxRate;
+            }
+            
+            // 个人所得税
+            if (incomeTaxOwner === 'buyer') {
+                buyerIncomeTax = assessedValue * incomeTaxRate;
+            } else if (incomeTaxOwner === 'seller') {
+                sellerIncomeTax = assessedValue * incomeTaxRate;
+            } else if (incomeTaxOwner === 'both') {
+                buyerIncomeTax = assessedValue * incomeTaxRate;
+                sellerIncomeTax = assessedValue * incomeTaxRate;
+            }
+            
+            // 增值税
+            if (vatOwner === 'buyer') {
+                buyerVAT = assessedValue * vatRate;
+            } else if (vatOwner === 'seller') {
+                sellerVAT = assessedValue * vatRate;
+            } else if (vatOwner === 'both') {
+                buyerVAT = assessedValue * vatRate;
+                sellerVAT = assessedValue * vatRate;
+            }
+            
+            // 垫资服务费
+            if (financingFeeOwner === 'buyer') {
+                buyerFinancingFee = financingFee;
+            } else if (financingFeeOwner === 'seller') {
+                sellerFinancingFee = financingFee;
+            } else if (financingFeeOwner === 'both') {
+                buyerFinancingFee = financingFee;
+                sellerFinancingFee = financingFee;
+            }
+            
+            // 贷款服务费
+            if (loanServiceFeeOwner === 'buyer') {
+                buyerLoanServiceFee = loanServiceFee;
+            } else if (loanServiceFeeOwner === 'seller') {
+                sellerLoanServiceFee = loanServiceFee;
+            } else if (loanServiceFeeOwner === 'both') {
+                buyerLoanServiceFee = loanServiceFee;
+                sellerLoanServiceFee = loanServiceFee;
+            }
+            
+            // 权证费
+            if (documentFeeOwner === 'buyer') {
+                buyerDocumentFee = documentFee;
+            } else if (documentFeeOwner === 'seller') {
+                sellerDocumentFee = documentFee;
+            } else if (documentFeeOwner === 'both') {
+                buyerDocumentFee = documentFee;
+                sellerDocumentFee = documentFee;
+            }
+            
+            // 工本费
+            if (mortgageFeeOwner === 'buyer') {
+                buyerMortgageFee = mortgageFee;
+            } else if (mortgageFeeOwner === 'seller') {
+                sellerMortgageFee = mortgageFee;
+            } else if (mortgageFeeOwner === 'both') {
+                buyerMortgageFee = mortgageFee;
+                sellerMortgageFee = mortgageFee;
+            }
+            
+            // 其他费用
+            if (otherFeeOwner === 'buyer') {
+                buyerOtherFee = otherFee;
+            } else if (otherFeeOwner === 'seller') {
+                sellerOtherFee = otherFee;
+            } else if (otherFeeOwner === 'both') {
+                buyerOtherFee = otherFee;
+                sellerOtherFee = otherFee;
+            }
+            
+            // 计算中介费
+            const buyerAgencyFee = totalPrice * buyerAgencyRate;
+            const sellerAgencyFee = totalPrice * sellerAgencyRate;
+            
+            // 计算买方和卖方总费用
+            const buyerTotal = buyerDeedTax + buyerAgencyFee + buyerLoanServiceFee + buyerFinancingFee + 
+                              buyerDocumentFee + buyerMortgageFee + buyerOtherFee + buyerIncomeTax + buyerVAT + downPayment;
+            
+            const sellerTotal = sellerVAT + sellerIncomeTax + sellerAgencyFee + sellerFinancingFee + 
+                              sellerLoanServiceFee + sellerDocumentFee + sellerMortgageFee + sellerOtherFee + sellerDeedTax;
+            
+            // 显示买方费用
+            document.getElementById('buyerDeedTax').textContent = formatAmount(buyerDeedTax);
+            document.getElementById('buyerIncomeTax').textContent = formatAmount(buyerIncomeTax);
+            document.getElementById('buyerVAT').textContent = formatAmount(buyerVAT);
+            document.getElementById('buyerAgencyFee').textContent = formatAmount(buyerAgencyFee);
+            document.getElementById('buyerLoanServiceFee').textContent = formatAmount(buyerLoanServiceFee);
+            document.getElementById('buyerFinancingFee').textContent = formatAmount(buyerFinancingFee);
+            document.getElementById('buyerDocumentFee').textContent = formatAmount(buyerDocumentFee);
+            document.getElementById('buyerMortgageFee').textContent = formatAmount(buyerMortgageFee);
+            document.getElementById('buyerOtherFee').textContent = formatAmount(buyerOtherFee);
+            document.getElementById('buyerDownPayment').textContent = downPayment === 0 ? "-" : downPayment.toFixed(0) + " 元";
+            document.getElementById('buyerTotal').textContent = buyerTotal === 0 ? "-" : buyerTotal.toFixed(0) + " 元";
+            
+            // 显示卖方费用
+            document.getElementById('sellerDeedTax').textContent = formatAmount(sellerDeedTax);
+            document.getElementById('sellerIncomeTax').textContent = formatAmount(sellerIncomeTax);
+            document.getElementById('sellerVAT').textContent = formatAmount(sellerVAT);
+            document.getElementById('sellerAgencyFee').textContent = formatAmount(sellerAgencyFee);
+            document.getElementById('sellerLoanServiceFee').textContent = formatAmount(sellerLoanServiceFee);
+            document.getElementById('sellerFinancingFee').textContent = formatAmount(sellerFinancingFee);
+            document.getElementById('sellerDocumentFee').textContent = formatAmount(sellerDocumentFee);
+            document.getElementById('sellerMortgageFee').textContent = formatAmount(sellerMortgageFee);
+            document.getElementById('sellerOtherFee').textContent = formatAmount(sellerOtherFee);
+            document.getElementById('sellerTotal').textContent = sellerTotal === 0 ? "-" : sellerTotal.toFixed(0) + " 元";
+        }
+        
+        // 重新计算所有费用
+        function calculateAll() {
+            calculatePrice();
+            calculateAssessed();
+            calculateLoan();
+            calculateMonthlyPayment();
+            calculateFees();
+        }
+        
+        // 费用归属选择器功能
+        function toggleOwnerMenu(id) {
+            const menu = document.getElementById(id + 'Menu');
+            const allMenus = document.querySelectorAll('.fee-owner-menu');
+            
+            // 隐藏所有其他菜单
+            allMenus.forEach(m => {
+                if (m !== menu) m.style.display = 'none';
+            });
+            
+            // 切换当前菜单
+            if (menu.style.display === 'block') {
+                menu.style.display = 'none';
+            } else {
+                menu.style.display = 'block';
+            }
+        }
+        
+        function setOwner(id, value) {
+            document.getElementById(id).value = value;
+            const btn = document.querySelector(`[onclick="toggleOwnerMenu('${id}')"]`);
+            
+            // 更新按钮显示
+            if (value === 'buyer') {
+                btn.textContent = '买';
+            } else if (value === 'seller') {
+                btn.textContent = '卖';
+            } else {
+                btn.textContent = '双';
+            }
+            
+            // 隐藏菜单
+            document.getElementById(id + 'Menu').style.display = 'none';
+            
+            // 重新计算费用
+            calculateFees();
+        }
+        
+        // 点击页面其他地方关闭所有菜单
+        document.addEventListener('click', function(e) {
+            if (!e.target.closest('.fee-owner-btn') && !e.target.closest('.fee-owner-menu')) {
+                document.querySelectorAll('.fee-owner-menu').forEach(menu => {
+                    menu.style.display = 'none';
+                });
+            }
+        });
+        
+        // 初始化计算
+        calculateAll();
+    </script>
+</body>
+</html>
